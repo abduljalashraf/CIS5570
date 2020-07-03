@@ -9,14 +9,15 @@
 */
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.StringTokenizer;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -30,14 +31,28 @@ public class WordCount {
 	{
 		private final static IntWritable one = new IntWritable(1);
 		private Text word = new Text();
+		private ArrayList<String> arrays = new ArrayList<>();
 		
 		@Override
 		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-			StringTokenizer itr = new StringTokenizer(value.toString());
-			while (itr.hasMoreTokens()) {
-				word.set(itr.nextToken());
-				context.write(word,  one);
+			List<String> worddoc = Arrays.asList(value.toString().split("\\s+"));
+			for(int pivot=0; pivot<worddoc.size()-4;pivot++)
+			{
+				word.set(worddoc.subList(pivot, pivot+5).toString().replace("[", "").replace("]","").replace(",", ""));
+				context.write(word, one);
 			}
+/*			StringTokenizer itr = new StringTokenizer(value.toString());
+			while (itr.hasMoreTokens()) {
+				arrays.add(itr.nextToken());
+			}
+			// System.out.println(arrays);
+			
+			while (itr.hasMoreTokens()) {
+				// for (i0nt i=0; i<5; i++) {
+				//	word.set(itr.nextToken());
+				//	arrays.add(e)
+				context.write(word,  one);
+			}*/
 		}
 	}
 	public static class WordCountReducer extends Reducer <Text, IntWritable, Text, IntWritable> {
@@ -59,8 +74,8 @@ public class WordCount {
 		
 		job.setJarByClass(WordCount.class);
 		
-		FileInputFormat.addInputPath(job, new Path("/home/cloudera/workspace/CIS5570/input/Sample.txt"));
-		FileOutputFormat.setOutputPath(job, new Path("/home/cloudera/workspace/CIS5570/output"));
+		FileInputFormat.addInputPath(job, new Path("/home/cloudera/workspace/FiveWordCount/input/Sample.txt"));
+		FileOutputFormat.setOutputPath(job, new Path("/home/cloudera/workspace/FiveWordCount/output"));
 		job.setMapperClass(WordCountMapper.class);
 		job.setReducerClass(WordCountReducer.class);
 		job.setCombinerClass(WordCountReducer.class);
